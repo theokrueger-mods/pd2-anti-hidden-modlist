@@ -1,47 +1,66 @@
 local Net = _G.LuaNetworking
-local hasbeardlib = {}
+local modders = {}
 local warned = {}
 
-local _receive_message_original = ChatManager._receive_message
-function ChatManager:_receive_message(channel_id, pname, message, ...)
-        if channel_id == 4 and Net:IsHost() then
-                -- checks for beardlib tag in outfit string
-                hasbeardlib[pname] = string.find(message, '/BCO/') ~= nil
+-- intercept all messages
+Hooks:PostHook(
+        ChatManager,
+        '_recieve_message',
+        'AHM_recieve_message',
+        function(self, channel_id, name, message, color, icon)
+                if channel_id == 4 and Net:IsHost() then
+                        -- check for beardlib outfit string. if this exists we know they for sure are running mods
+                        modders[name] = string.find(message, '/BCO/') ~= nil
+                end
         end
-        return _receive_message_original(self, channel_id, pname, message, ...)
-end
+)
 
+-- when a client joins n stuff
 Hooks:PostHook(
         NetworkPeer,
         'set_ip_verified',
         'AHM_set_ip_verified',
         function(self, state)
+                -- wait an additional 7 seconds for a modlist to load
                 DelayedCalls:Add(
-                        self:name() .. 'waitforload',
-                        5,
+                        'AHM_wait_for_' .. self:name .. '_' .. math.random(),
+                        7,
                         function()
+                                -- get some info
                                 local modded = self:is_modded()
                                 local name = self:name()
-                                warned[name] = warned[name] or 0
-                                if modded then
-                                        if hasbeardlib[name] and warned[name] < 4 then
-                                                managers.chat:feed_system_message(1, name .. ' has a modlist and is running BeardLib!')
-                                                warned[name] = 3
-                                        elseif warned[name] < 3 then
-                                                managers.chat:feed_system_message(1, name .. ' has a modlist!')
-                                                warned[name] = 2
-                                        end
-                                else
-                                        if hasbeardlib[name] then
-                                                managers.chat:feed_system_message(1, name .. ' is probably hiding their modlist! For shame!')
-                                                managers.chat:feed_system_message(1, 'Please check ' .. name .. "'s modlist before taking any action.")
-                                                warned[name] = 4
-                                        elseif warned[name] == 0 then
-                                                managers.chat:feed_system_message(1, name .. ' is mod-free so far.')
-                                                warned[name] = 1
-                                        end
-                                end
+
+                                -- inform the user of this information now
+                                managers.chat:feed_system_message(
+                                        1,
+                                        name ..
+                                        modders[name] and
+                                        -- if had beardlib
+                                        (
+                                                ' is running beardlib' ..
+                                                (
+                                                        modded and
+                                                        -- if has modlist and beardlib
+                                                        ' and is showing their modlist!' or
+                                                        -- if has no modlist and beardib >:(
+                                                        ' but is HIDING their modlist! for shame!!'
+                                                )
+                                        )
+                                        or
+                                        -- if not has beardlib
+                                        (
+                                                ' is not running beardlib' ..
+                                                (
+                                                        modded and
+                                                        -- if has modlist and no beardlib
+                                                        ' but has a modlist!'
+                                                        or
+                                                        -- if has no modlist and no beardlib
+                                                        ' and appears to be free of mods!'
+                                                )
+                                        )
+                                ) -- end feed_system_message
                         end
-                )
+                ) -- end delayedcall
         end
 )
