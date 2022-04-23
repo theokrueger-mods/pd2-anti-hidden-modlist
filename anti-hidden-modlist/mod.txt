@@ -1,12 +1,13 @@
 {
-	"blt_version" : 2,
-	"name" : "anti-hidden modlist",
-	"author" : "theokrueger",
-	"version" : "1.1",
-	"hooks" : [
-		{
-			"hook_id" : "lib/managers/chatmanager",
-			"script_path" : "hooks/chatmanager.lua"
-		}
-	]
+        "blt_version" : 2,
+        "name" : "anti-hidden modlist",
+        "author" : "theokrueger",
+        "description" : "detects whether clients running beardlib are hiding their modlist or not"
+        "version" : "1.1",
+        "hooks" : [
+                {
+                        "hook_id" : "lib/managers/chatmanager",
+                        "script_path" : "hooks/chatmanager.lua"
+                }
+        ]
 }
