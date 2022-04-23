@@ -2,6 +2,7 @@
 	"blt_version" : 2,
 	"name" : "anti-hidden modlist",
 	"author" : "mercu",
+	"version" : "1.1",
 	"hooks" : [
 		{
 			"hook_id" : "lib/managers/chatmanager",
